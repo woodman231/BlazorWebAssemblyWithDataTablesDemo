@@ -1,0 +1,72 @@
+﻿@page "/datatables1"
+@implements IDisposable
+@using BlazorWebAssemblyWithDataTablesDemo.Shared
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<PageTitle>Weather forecast - DataTables - Rendered / 0 Config</PageTitle>
+
+<h1>Weather forecast - DataTables - Rendered / 0 Config</h1>
+
+<p>This component demonstrates fetching data from the server. After which it will initialize a data table. Any time the data is refreshed, the datatable is destroyed and rebuilt.</p>
+
+<button class="btn btn-primary mb-2" type="button" @onclick="RefreshForecastsAsync">Refresh</button>
+
+@if (forecasts == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table" id="dt1">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Temp. (C)</th>
+                <th>Temp. (F)</th>
+                <th>Summary</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var forecast in forecasts)
+            {
+                <tr>
+                    <td>@forecast.Date.ToShortDateString()</td>
+                    <td>@forecast.TemperatureC</td>
+                    <td>@forecast.TemperatureF</td>
+                    <td>@forecast.Summary</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private WeatherForecast[]? forecasts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshForecastsAsync();
+    }    
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if(forecasts is not null)
+        {
+            await JS.InvokeVoidAsync("DataTables1.destroyDataTable");
+            await JS.InvokeVoidAsync("DataTables1.buildDataTable");
+        }        
+    }
+
+    private async Task RefreshForecastsAsync()
+    {        
+        forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("WeatherForecast");        
+    }    
+
+    async void IDisposable.Dispose()
+    {        
+        await JS.InvokeVoidAsync("DataTables1.destroyDataTable");
+    }
+}

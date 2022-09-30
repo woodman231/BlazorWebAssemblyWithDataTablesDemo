@@ -1,0 +1,51 @@
+﻿@page "/datatables2"
+@implements IDisposable
+@using BlazorWebAssemblyWithDataTablesDemo.Shared
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<PageTitle>Weather forecast - DataTables - Ajax</PageTitle>
+
+<h1>Weather forecast - DataTables - Ajax</h1>
+
+<p>This component demonstrates fetching data from the server. This will use DataTables Ajax functionality instead of C# HttpClient. The HttpClient is still injected as a convenient way to get the BaseAddress.</p>
+
+<button class="btn btn-primary mb-2" type="button" @onclick="RefreshForecastsAsync">Refresh</button>
+
+<table class="table" id="dt2">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Temp. (C)</th>
+            <th>Temp. (F)</th>
+            <th>Summary</th>
+        </tr>
+    </thead>
+</table>
+
+@code {
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (firstRender)
+        {
+            if (Http.BaseAddress is not null)
+            {
+                string forecastsUrl = Http.BaseAddress.ToString() + "weatherforecast";
+                await JS.InvokeVoidAsync("DataTables2.buildDataTable", forecastsUrl);
+            }
+        }
+    }
+
+    private async Task RefreshForecastsAsync()
+    {
+        await JS.InvokeVoidAsync("DataTables2.refreshDataTable");
+    }
+
+    async void IDisposable.Dispose()
+    {
+        await JS.InvokeVoidAsync("DataTables2.destroyDataTable");
+    }
+}
